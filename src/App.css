@@ -1,5 +1,28 @@
+.task-title {
+  text-align: center;
+  font-family: 'Courier New';
+  border: white;
+  font-size: 1.17em;
+  font-weight: bolder;
+  width: 100%;
+  z-index: 1;
+}
+
+.task-description {
+  text-align: center;
+  font-family: 'Courier New';
+  border: white;
+  width: 100%;
+  z-index: 1;
+}
+
+.task-checkbox {
+  z-index: 2;
+}
+
 .App {
   text-align: center;
+  font-family: 'Courier New';
 }
 
 .App-logo {
@@ -32,6 +55,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
