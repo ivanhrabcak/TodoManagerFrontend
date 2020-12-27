@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Checkbox } from "pretty-checkbox-react";
 
 const Task = ({ taskData }) => {
     const [task, setTask] = useState(taskData);
