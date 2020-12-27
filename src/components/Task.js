@@ -61,7 +61,7 @@ const Task = ({ taskData }) => {
             <div className="d-flex align-items-center">
                 <input type="checkbox" className="task-checkbox" checked={isTaskDone} onChange={(e) => { setIsTaskDone(e.target.checked) }} />
                 <div className="d-flex align-items-center flex-column" style={{padding: '10px'}}>
-                    <input value={task.name}
+                    <input value={taskName}
                         className="task-title"
                         onChange={(e) => { setTaskName(e.target.value) }} />
                     <input value={taskDescription}
