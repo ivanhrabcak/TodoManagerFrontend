@@ -1,0 +1,10 @@
+.Task-description {
+  padding: 10px;
+}
+
+.Task-remove-button {
+  border: white;
+  background-color: #d11a2a;
+  height: 100%;
+  transform: translate(0%, 50%);
+}
