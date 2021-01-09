@@ -2,29 +2,65 @@ import { useAuth0 } from '@auth0/auth0-react';
 import { useEffect, useState } from 'react';
 import { Task } from './Task';
 
+const useGetData = ({ url }) => {
+  const [data, setData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorCode, setErrorCode] = useState();
+  const { getAccessTokenSilently } = useAuth0();
+
+  useEffect(() => {
+    const sleep = async (ms) => {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    };
+
+    const getData = async () => {
+      const token = await getAccessTokenSilently();
+
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        setErrorCode(404);
+        return;
+      }
+
+      setErrorCode(response.status);
+
+      await sleep(5000);
+
+      const json = await response.json();
+      setData(json);
+      setIsLoading(false);
+    };
+
+    getData();
+  }, [getAccessTokenSilently, url]);
+
+  return { data, setData, isLoading, errorCode };
+};
+
 const Tasks = () => {
-  const [tasks, setTasks] = useState([]);
-  const { user, getAccessTokenSilently } = useAuth0();
+  // const [tasks, setTasks] = useState([]);
+  const { user } = useAuth0();
+  const { data, setData, isLoading, errorCode } = useGetData({
+    url: 'http://localhost:8080/tasks',
+  });
+
+  if (isLoading) {
+    return <p>Loading ...</p>;
+  }
+
+  if (errorCode && errorCode !== 200) {
+    return <p>An error {errorCode} occurred</p>;
+  }
 
   const fetchData = async () => {
     const response = await fetch('http://localhost:8080/tasks');
-    setTasks(await response.json());
+    setData(await response.json());
   };
-
-  useEffect(() => {
-    fetchData();
-
-    const getToken = async () => {
-      const token = await getAccessTokenSilently({
-        audience: 'http://localhost:8080',
-        scope: '',
-      });
-
-      console.log(token);
-    };
-
-    getToken();
-  }, []);
 
   const createTask = async () => {
     const response = await fetch('http://localhost:8080/tasks', {
@@ -36,7 +72,7 @@ const Tasks = () => {
       }),
     });
 
-    setTasks([...tasks, await response.json()]);
+    setData([...data, await response.json()]);
   };
 
   const onTaskRemoved = async () => {
@@ -48,16 +84,17 @@ const Tasks = () => {
       <h1>Hello {user.name}</h1>
       <h1 style={{ padding: '10px' }}>Todo List</h1>
       <button onClick={() => createTask()}>New Task</button>
-      {tasks.map((task) => {
-        console.log(task);
-        return (
-          <Task
-            key={`task-${task.id}`}
-            taskData={task}
-            onTaskRemoved={onTaskRemoved}
-          />
-        );
-      })}
+      {data &&
+        data.map((task) => {
+          console.log(task);
+          return (
+            <Task
+              key={`task-${task.id}`}
+              taskData={task}
+              onTaskRemoved={onTaskRemoved}
+            />
+          );
+        })}
     </div>
   );
 };
