@@ -1,6 +1,8 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import { useEffect, useState } from 'react';
+import { Route, Switch, useRouteMatch } from 'react-router-dom';
 import { Task } from './Task';
+import TaskDetail from './TaskDetail';
 
 const useGetData = ({ url }) => {
   const [data, setData] = useState([]);
@@ -49,6 +51,8 @@ const Tasks = () => {
     url: 'http://localhost:8080/tasks',
   });
 
+  const match = useRouteMatch();
+
   if (isLoading) {
     return <p>Loading ...</p>;
   }
@@ -80,22 +84,29 @@ const Tasks = () => {
   };
 
   return (
-    <div>
-      <h1>Hello {user.name}</h1>
-      <h1 style={{ padding: '10px' }}>Todo List</h1>
-      <button onClick={() => createTask()}>New Task</button>
-      {data &&
-        data.map((task) => {
-          console.log(task);
-          return (
-            <Task
-              key={`task-${task.id}`}
-              taskData={task}
-              onTaskRemoved={onTaskRemoved}
-            />
-          );
-        })}
-    </div>
+    <Switch>
+      <Route path={`${match.url}/detail/:taskId`}>
+        <TaskDetail />
+      </Route>
+      <Route path={`${match.path}`}>
+        <div>
+          <h1>Hello {user.name}</h1>
+          <h1 style={{ padding: '10px' }}>Todo List</h1>
+          <button onClick={() => createTask()}>New Task</button>
+          {data &&
+            data.map((task) => {
+              console.log(task);
+              return (
+                <Task
+                  key={`task-${task.id}`}
+                  taskData={task}
+                  onTaskRemoved={onTaskRemoved}
+                />
+              );
+            })}
+        </div>
+      </Route>
+    </Switch>
   );
 };
 

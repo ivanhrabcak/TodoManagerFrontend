@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './Task.css';
-// import { modifyTask } from '../api';
 import * as Api from '../api';
+import { Link, useRouteMatch } from 'react-router-dom';
 
 const Task = ({ taskData, onTaskRemoved }) => {
   const [task, setTask] = useState(taskData);
@@ -10,14 +10,10 @@ const Task = ({ taskData, onTaskRemoved }) => {
   const [taskDescription, setTaskDescription] = useState(task.description);
   const [isTaskDone, setIsTaskDone] = useState(task.done);
 
+  const match = useRouteMatch();
+
   const onTaskChanged = async (name, description) => {
     const newTask = { ...task, name, description };
-
-    // const response = await fetch(`http://localhost:8080/tasks/${task.id}`, {
-    //   method: 'PUT',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(newTask),
-    // });
 
     const updatedTask = await Api.modifyTask(newTask);
 
@@ -51,6 +47,7 @@ const Task = ({ taskData, onTaskRemoved }) => {
     <div className="d-flex justify-content-center" style={{ padding: '10px' }}>
       <div className="d-flex align-items-center flex-column">
         <div className="d-flex align-items-center">
+          <Link to={`${match.url}/detail/${task.id}`}>Detail</Link>
           <input
             type="checkbox"
             className="task-checkbox"
