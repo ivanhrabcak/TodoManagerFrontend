@@ -1,74 +1,85 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import * as Api from '../Api';
 
-const Task = ({ taskData }) => {
+const Task = ({ taskData, onTaskRemoved }) => {
     const [task, setTask] = useState(taskData);
     const [taskName, setTaskName] = useState(task.name);
     const [taskDescription, setTaskDescription] = useState(task.description);
     const [isTaskDone, setIsTaskDone] = useState(task.done);
-    
-    const isInitialRender = useRef(true);
-    const isTaskDeleted = useRef(false);
 
-    useEffect(() => {
-        if (isInitialRender.current) {
-            return;
-        }
+    const onTaskChanged = async (name, description) => {
+        const newTask = { ...task, name, description };
 
-        const newTask = { ...task, name: taskName, description: taskDescription }; 
-
-        fetch(`http://localhost:8080/tasks/update/${task.id}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newTask)
-        })
-            .then(async response => {
-                console.log(await response.json());
-                if (response.json == null) {
-                    console.log("Failed to update task!");
-                }
-            });
+        const updatedTask = await Api.modifyTask(newTask);
         
-    }, [taskName, taskDescription]);
+        setTask(updatedTask);
+        setTaskName(name);
+        setTaskDescription(description);
 
-    useEffect(() => {
-        if (isInitialRender.current) {
-            console.log("Initial render!");
-            isInitialRender.current = false;
-            return;
+        
+    };
+
+    const onTaskToggle = async (isDone) => {
+        const response = await Api.toggleTask(task.id);
+
+        if (response == null) {
+            console.error('Failed to update task!');
         }
+        else {
+            setIsTaskDone(isDone);
+        }
+    };
 
-        console.log("isTaskDone changed!");
-
-        fetch(`http://localhost:8080/tasks/toggle/${task.id}`, {
-            method: 'POST',
-        })
-            .then(async response => {
-                if (response.json == null) {
-                    console.log("Failed to update task!");
-                }
-            });
-    }, [isTaskDone]);
-
-    if (isTaskDeleted.current) {
-        setTask({});
-        return (<div/>)
-    }
+    const remove = async () => {
+        await Api.removeTask(task.id);
+        onTaskRemoved(task);
+    };
 
     return (
+        <div className="d-flex justify-content-center" style={{ padding: '10px' }}>
         <div className="d-flex align-items-center flex-column">
-            <div className="d-flex align-items-center">
-                <input type="checkbox" className="task-checkbox" checked={isTaskDone} onChange={(e) => { setIsTaskDone(e.target.checked) }} />
-                <div className="d-flex align-items-center flex-column" style={{padding: '10px'}}>
-                    <input value={taskName}
-                        className="task-title"
-                        onChange={(e) => { setTaskName(e.target.value) }} />
-                    <input value={taskDescription}
-                        className="task-description"
-                        onChange={(e) => { setTaskDescription(e.target.value) }} />
-                </div>
+          <div className="d-flex align-items-center">
+            <input
+              type="checkbox"
+              className="task-checkbox"
+              checked={isTaskDone}
+              onChange={(e) => {
+                onTaskToggle(e.target.checked);
+              }}
+            />
+            <div className="d-flex align-items-center flex-column Task-description">
+              <input
+                value={taskName}
+                className="task-title"
+                onChange={(e) => {
+                    onTaskChanged(e.target.value, taskDescription);
+                }}
+              />
+              <input
+                value={taskDescription}
+                className="task-description"
+                onChange={(e) => {
+                    onTaskChanged(taskName, e.target.value);
+                }}
+              />
             </div>
+          </div>
         </div>
+      <button
+        className="Task-remove-button"
+        style={{
+          border: 'white',
+          backgroundColor: '#d11a2a',
+          height: '100%',
+          transform: 'translate(0%, 50%)',
+        }}
+        onClick={() => {
+          remove();
+        }}>
+        x
+      </button>
+    </div>
     );
 };
 
