@@ -1,27 +1,31 @@
 import { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import * as Api from '../Api';
+import { useAuth0 } from '@auth0/auth0-react';
 
 const Task = ({ taskData, onTaskRemoved }) => {
     const [task, setTask] = useState(taskData);
     const [taskName, setTaskName] = useState(task.name);
     const [taskDescription, setTaskDescription] = useState(task.description);
     const [isTaskDone, setIsTaskDone] = useState(task.done);
+    const { getAccessTokenSilently } = useAuth0();
 
     const onTaskChanged = async (name, description) => {
         const newTask = { ...task, name, description };
 
-        const updatedTask = await Api.modifyTask(newTask);
-        
+        const updatedTask = await Api.modifyTask(newTask, await getAccessTokenSilently());
+
+
         setTask(updatedTask);
         setTaskName(name);
         setTaskDescription(description);
-
-        
     };
 
     const onTaskToggle = async (isDone) => {
-        const response = await Api.toggleTask(task.id);
+        let response = await Api.toggleTask(task.id, await getAccessTokenSilently());
+
+        response = await response.json();
+
 
         if (response == null) {
             console.error('Failed to update task!');
@@ -32,7 +36,7 @@ const Task = ({ taskData, onTaskRemoved }) => {
     };
 
     const remove = async () => {
-        await Api.removeTask(task.id);
+        await Api.removeTask(task.id, await getAccessTokenSilently());
         onTaskRemoved(task);
     };
 
