@@ -9,9 +9,9 @@ ReactDOM.render(
   <React.StrictMode>
     <Auth0Provider
     domain={process.env.REACT_APP_AUTH0_DOMAIN}
-    client_id={process.env.REACT_APP_AUTH0_CLIENT_ID}
+    clientId={process.env.REACT_APP_AUTH0_CLIENT_ID}
     redirectUri={window.location.origin}
-    audience='http://localhost:3000'>
+    audience='todo-manager'>
       <App />
     </Auth0Provider>
   </React.StrictMode>,
