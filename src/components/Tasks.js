@@ -1,53 +1,118 @@
 import { useAuth0 } from '@auth0/auth0-react';
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react';
 import { Task } from './Task';
 import * as Api from '../Api';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  addTaskAction,
+  setTasksAction,
+  updateNewDescriptionAction,
+  updateNewNameAction,
+} from '../redux';
 
-const useGetData = () => {
-    const [data, setData] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const { getAccessTokenSilently } = useAuth0();
+const useGetData = (selector, action) => {
+  //   const [data, setData] = useState([]);
+  const data = useSelector(selector);
+  const [isLoading, setIsLoading] = useState(true);
+  const { getAccessTokenSilently } = useAuth0();
 
-    useEffect(() => {
-        const getData = async () => {
-            const token = await getAccessTokenSilently();
-            setData(await Api.fetchTasks(token));
-            setIsLoading(false);
-        };
+  const dispatch = useDispatch();
 
-        getData();
-    }, [getAccessTokenSilently]);
-  
-    return { data, setData, isLoading, getAccessTokenSilently };
+  useEffect(() => {
+    const getData = async () => {
+      const token = await getAccessTokenSilently();
+      dispatch(action(await Api.fetchTasks(token)));
+      setIsLoading(false);
+    };
+
+    getData();
+  }, [getAccessTokenSilently]);
+
+  return { data, isLoading, getAccessTokenSilently };
 };
 
 const Tasks = () => {
-    const { data, setData, isLoading, getAccessTokenSilently } = useGetData();
+  const { data, isLoading, getAccessTokenSilently } = useGetData(
+    (state) => state.tasks,
+    setTasksAction,
+  );
 
-    if (isLoading) {
-        return <h1>Loading...</h1>
-    }
+  const state = useSelector((state) => state);
 
-    const onTaskRemoved = async () => {
-        setData(await Api.fetchTasks(await getAccessTokenSilently()));
-    };
+  const newName = useSelector((state) => {
+    return state.newTask.name;
+  });
+  const newDescription = useSelector((state) => state.newTask.description);
 
-    return (
-    <>
-        <h1 className='padded'>Todo List</h1>
-        <button onClick={ async () => {setData(...data, await Api.createTask(await getAccessTokenSilently()))} }>Add Task</button>
-        {data &&
-            data.map((task) => {
-                return <Task
-                key={`task-${task.id}`}
-                taskData={ task }
-                onTaskRemoved= { onTaskRemoved }
-                />
-            })
-        }
-    </>
+  const isEditable = useSelector((state) => state.editMode);
 
+  const dispatch = useDispatch();
+
+  if (isLoading) {
+    return <h1>Loading...</h1>;
+  }
+
+  const onTaskRemoved = async () => {
+    dispatch(
+      setTasksAction(await Api.fetchTasks(await getAccessTokenSilently())),
     );
+  };
+
+  const onNameChanged = (name) => {
+    dispatch(updateNewNameAction(name));
+  };
+
+  const onDescriptionChanged = (description) => {
+    dispatch(updateNewDescriptionAction(description));
+  };
+
+  console.log({ data });
+
+  return (
+    <>
+      <div className="d-flex align-items-center flex-column Task-description">
+        <input
+          value={newName}
+          className="task-title"
+          onChange={(e) => {
+            onNameChanged(e.target.value);
+          }}
+        />
+        <input
+          value={newDescription}
+          className="task-description"
+          onChange={(e) => {
+            onDescriptionChanged(e.target.value);
+          }}
+        />
+      </div>
+      <button
+        onClick={async () => {
+          dispatch(
+            addTaskAction(
+              await Api.createTask(
+                await getAccessTokenSilently(),
+                newName,
+                newDescription,
+              ),
+            ),
+          );
+        }}>
+        Add Task
+      </button>
+      {data &&
+        data.map((task) => {
+          return (
+            <Task
+              key={`task-${task.id}`}
+              taskId={task.id}
+              onTaskRemoved={onTaskRemoved}
+              isEditable={isEditable}
+            />
+          );
+        })}
+    </>
+  );
 };
 
 export { Tasks };
